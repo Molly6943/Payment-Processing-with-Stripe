@@ -1,0 +1,117 @@
+body {
+	background: #eaeaea;
+	width: 100%;
+}
+button {
+	cursor: pointer;
+}
+.register-body {
+	background: #fff;
+	width: 900px;
+	padding-bottom: 40px;
+	margin: 70px auto 2% auto;
+	border: 1px #d5d5d5 solid
+}
+.register-form {
+	width: 450px;
+  padding: 30px 0;
+	margin: 0 auto;
+}
+.register-input label {
+	font-size: 15px;
+	margin: 10px 0;
+	display: block;
+}
+.register-input input {
+	height: 40px;
+	line-height: 40px;
+	padding-left: 10px;
+	font-size: 14px;
+	width:100%;
+	box-sizing: border-box;
+  border:1px solid #d9d9d9;
+  outline: none;
+}
+.register-input input:focus {
+	background: #ebf6fd;
+}
+#smsCodeBox button {
+	display: inline-block;
+	width: 30%;
+	height: 40px;
+	line-height: 40px;
+	background: #2191e3;
+	border: 0;
+	color: #fff
+}
+#smsCodeBox input {
+	width: 70%;
+	float: left;
+}
+.register-btn {
+	margin-top: 25px;
+	background: #2191e3;
+	border: 0;
+	color: #fff;
+	width: 100%;
+	text-align: center;
+	height: 40px;
+}
+.register-link p {
+	color: rgb(143, 139, 139);
+	display: inline-block;
+	margin: 20px 10px 0 0;
+}
+.register-link a {
+	color: #2191e3;
+}
+
+/* login css part */
+.signIn-body {
+	background: #fff;
+	width: 450px;
+	padding: 40px;
+	margin: 10% auto;
+	border: 1px #d5d5d5 solid
+}
+
+/* dashboard css part */
+
+.dashboard-body{
+	background: #fff;
+	width: 900px;
+	padding-bottom: 40px;
+	margin: 10px auto 2% auto;
+	border: 1px #d5d5d5 solid
+}
+.dashboard-body section {
+	width: 450px;
+  padding: 30px 0;
+	margin: 0 auto;
+}
+.register-form h3 {
+	margin: 0 0 20px 0;
+}
+.dashboard-select .dashboard-link{
+	padding-left: 70px;
+	margin-top: 10px;
+}
+.dashboard-select select {
+	border: 1px #d5d5d5 solid;
+  margin-left: 5px;
+  appearance:none;
+  -moz-appearance:none;
+  -webkit-appearance:none;
+  height: 30px;
+  padding:2px 10px;
+  padding-right: 20px;
+  box-sizing: border-box;
+}
+.dashboard-link button {
+	width: 80px;
+	height: 40px;
+	line-height: 40px;
+	background: #2191e3;
+	border: 0;
+	color: #fff;
+}

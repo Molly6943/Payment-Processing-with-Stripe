@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="id=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="/css/register.css" />
+  </head>
+  <body>
+    <div class="dashboard-body">
+      <div class="register-form">
+        <h3>Edit your infomation</h3>
+        <div class="register-input">
+          <label>Full Name</label>
+          <input id="fullName" value=""/>
+        </div>
+        <div class="register-input">
+          <label>Brith Date</label>
+          <input id="brithday" value="" type="date"/>
+        </div>
+        <div class="register-input">
+          <label>Email</label>
+          <input id="email" value=""/>
+        </div>
+        <div class="register-input">
+          <label>Mobile</label>
+          <input id="mobile" value="">
+        </div>
+        <div class="register-input">
+          <label>Password</label>
+          <input id="password" type="password"/>
+        </div>
+        <button class="register-btn" >Submit</button>
+      </div>
+    </div>
+    <div class="dashboard-body">
+      <section>
+        <div class="dashboard-select">
+          <label>Switch your subscription</label>
+          <select onchange="onLocaleSelectChange(this)" id="localSelect">
+            <option value="10" selected="selected">Basic</option>
+            <option value="20">Plus</option>
+            <option value="30">Advanced</option>
+          </select>
+        </div>
+        <div class="dashboard-link">
+          <p>If you click this button, you can cancle your subscription.</p>
+          <button>Cancle</button>
+        </div>
+      </section>
+    </div>
+  </body>
+
+  <script type="text/javascript">
+    //
+  </script>
+
+
+</html>

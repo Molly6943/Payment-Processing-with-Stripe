@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="id=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sign in</title>
+    <link rel="stylesheet" type="text/css" href="/css/register.css" />
+  </head>
+  <body>
+    <div class="signIn-body">
+      <div class="register-input">
+        <label>Email</label>
+        <input id="email"/>
+      </div>
+      <div class="register-input">
+        <label>Password</label>
+        <input id="password" type="password"/>
+      </div>
+      <button class="register-btn" onClick='singIn()'>Login</button>
+      <div class="register-link">
+        <p>Don't have our account yet?</p>
+        <a href="/views/register.html">Sign Up</a>
+      </div>
+    </div>
+  </body>
+
+  <script type="text/javascript">
+    function singIn () {
+      var params = {}
+      var email = params.email = document.getElementById('email').value.trim()
+      var password = params.password = document.getElementById('password').value.trim()
+
+      if (!email || !password) {
+        return alert('email and password is required!')
+      }
+      fetch('/api/signin/',
+        {
+          body: JSON.stringify(params),
+          method: 'POST'
+        }).then(res => {
+          console.log(res)
+          location.href = '/views/subscription.html'
+        }).catch(err => {
+          console.log(err)
+        })
+    }
+
+  </script>
+
+
+</html>

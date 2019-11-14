@@ -1,46 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="id=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Subscription</title>
-    <link rel="stylesheet" type="text/css" href="/css/admin.css" />
-  </head>
-  <body>
-    <div class="admin-body">
-      <table>
-        <caption>List of Customer</caption>
-        <thead>
-          <tr>
-            <th scope="col">Full Name</th>
-            <th scope="col">Email</th>
-            <th scope="col">Brith Date</th>
-            <th scope="col">Cell Number</th>
-            <th scope="col">Subscription</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td data-label="fullName">Visa - 3412</td>
-            <td data-label="email">04/01/2016</td>
-            <td data-label="brithday">$1,190</td>
-            <td data-label="number">+6588999314</td>
-            <td data-label="subscription">03/01/2016 - 03/31/2016</td>
-            <td data-label="action">
-              <a>switch</a> |
-              <a>cancle</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </body>
+<link rel="stylesheet" type="text/css" href="/css/admin.css" />
+<table>
+    <caption>List of Customer</caption>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Full Name</th>
+        <th>Email</th>
+        <th>Brith Date</th>
+        <th>Cell Number</th>
+        <th>Subscription</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      {{#list}}
+        <tr>
+          <td>{{id}}</td>
+          <td>{{full_name}}</td>
+          <td>{{email}}</td>
+          <td>{{birthday}}</td>
+          <td>{{mobile}}</td>
+          <td>{{subscription}}</td>
+          <td>
+            <a href="#" data-index="{{id}}" id="switchBtn">switch</a> |
+            <a href="#" data-index="{{id}}" id="cancelBth">cancel</a>
+          </td>
+        </tr>
+      {{/list}}
+    </tbody>
+  </table>
+  <script>
+    var cancelBtn = document.getElementById('cancelBth');
+    var switchBtn = document.getElementById('switchBtn');
+    cancelBtn.addEventListener('click', function(e) {
+      var el = e.target;
+      var id = el.dataset.index
+      let params = { id: id }
+      console.log(params)
+      fetch('/cancel',
+        {
+          body: JSON.stringify(params),
+          headers: {
+            'content-type': 'application/json'
+          },
+          method: 'POST'
+        }).then((res) => {
+          console.log('####', res)
+          if (res.status === 200) {
+            // getUsers()
+            location.href = `http://${location.host}/admin`
+          }
+        }).catch((err) => {
+          console.log(err)
+        })
+    })
 
-  <script type="text/javascript">
-    //
+    switchBtn.addEventListener('click', function(e) {
+      var el = e.target;
+      var id = el.dataset.index
+    })
+
+    function getUsers () {
+      fetch('/admin').then((res) => {
+        console.log('res', res)
+        }).catch((err) => {
+          console.log(err)
+        })
+    }
   </script>
-
-
-</html>

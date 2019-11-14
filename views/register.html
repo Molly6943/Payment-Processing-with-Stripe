@@ -1,86 +1,87 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="id=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Register</title>
-    <link rel="stylesheet" type="text/css" href="/css/register.css" />
-  </head>
-  <body>
-    <div class="register-body">
-      <div class="register-form">
-        <div class="register-input">
-          <label>Full Name</label>
-          <input id="fullName"/>
-        </div>
-        <div class="register-input">
-          <label>Brith Date</label>
-          <input id="brithday" type="date"/>
-        </div>
-        <div class="register-input">
-          <label>Email</label>
-          <input id="email"/>
-        </div>
-        <div class="register-input">
-          <label>Mobile</label>
-          <input id="mobile"/ placeholder="eg: +6588999314">
-        </div>
-        <div class="register-input" id="smsCodeBox">
-          <label>SMS Code</label>
-          <input id="smsVerificationCode"/>
-          <button id="sendSmsBtn" onClick="sendSms(this)">Send SMS</button>
-        </div>
-        <div class="register-input">
-          <label>Password</label>
-          <input id="password" type="password"/>
-        </div>
-        <button class="register-btn" onClick='singUp()'>Sign Up</button>
-        <div class="register-link">
-          <p>Already have an account?</p>
-          <a href="/views/login.html">Login</a>
-        </div>
-      </div>
+<link rel="stylesheet" type="text/css" href="/css/register.css" />
+<div class="register-body">
+  <div class="register-form">
+    <div class="register-input">
+      <label>Full Name</label>
+      <input id="fullName" value=""/>
     </div>
-  </body>
+    <div class="register-input">
+      <label>Brith Date</label>
+      <input id="birthday" type="date" />
+    </div>
+    <div class="register-input">
+      <label>Email</label>
+      <input id="email"/>
+    </div>
+    <div class="register-input">
+      <label>Mobile</label>
+      <input id="mobile"/ placeholder="eg: +6588999314">
+    </div>
+    <div class="register-input" id="smsCodeBox">
+      <label>SMS Code</label>
+      <input id="smsVerificationCode"/>
+      <button id="sendSmsBtn" onClick="sendSms(this)">Send SMS</button>
+    </div>
+    <div class="register-input">
+      <label>Password</label>
+      <input id="password" type="password"/>
+    </div>
+    <button class="register-btn" onClick='singUp()'>Sign Up</button>
+    <div class="register-link">
+      <p>Already have an account?</p>
+      <a href="/views/login.html">Login</a>
+    </div>
+  </div>
+</div>
 
-  <script type="text/javascript">
+<script type="text/javascript">
+  function sendSms () {
+    var mobile = document.getElementById('mobile').value;
+    if (!mobile) { return alert('mobile is required!') }
+    fetch('/sms/verficationcode',
+      {
+        body: JSON.stringify({mobile: mobile}),
+        headers: {
+          'content-type': 'application/json'
+        },
+        method: 'POST'
+      }).then((res) => {
+        console.log(res.json())
+      }).catch((err) => {
+        console.log(err)
+      })
+  }
 
-    function sendSms () {
-      var mobile = document.getElementById('mobile').value;
-      if (!mobile) { return alert('mobile is required!') }
-      fetch('/api/sms/verficationcode',
-        {
-          body: {mobile: mobile},
-          method: 'POST'
-        }).then((res) => {
-          console.log(res.json())
-        }).catch((err) => {
-          console.log(err)
-        })
+  function singUp () {
+    var params = {}
+    var fullName = params.fullName = document.getElementById('fullName').value.trim()
+    var birthday = params.birthday = document.getElementById('birthday').value.trim()
+    var email = params.email = document.getElementById('email').value.trim()
+    var mobile = params.mobile = document.getElementById('mobile').value.trim()
+    var smsVerificationCode = params.smsVerificationCode = document.getElementById('smsVerificationCode').value.trim()
+    var password = params.password = document.getElementById('password').value.trim()
+    if (!fullName || !email || !mobile || !smsVerificationCode || !password) {
+      return alert('All inputs are required!')
     }
-
-    function singUp () {
-      var params = {}
-      var fullName = params.fullName = document.getElementById('fullName').value.trim()
-      var brithday = params.brithday = document.getElementById('birthday').value.trim()
-      var email = params.email = document.getElementById('email').value.trim()
-      var mobile = params.mobile = document.getElementById('mobile').value.trim()
-      var smsVerificationCode = params.smsVerificationCode = document.getElementById('smsVerificationCode').value.trim()
-      var password = params.password = document.getElementById('password').value.trim()
-      if (!fullName || !email || !mobile || !smsVerificationCode || !password) {
-        return alert('All inputs are required!')
-      }
-      fetch('/api/signup',
-        {
-          body: JSON.stringify(params),
-          method: 'POST'
-        }).then((res) => {
-          console.log(res)
-        }).catch((err) => {
-          console.log(err)
-        })
-    }
-
-  </script>
-</html>
+    fetch('/signup',
+      {
+        body: JSON.stringify(params),
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        }
+      }).then((res) => {
+        if (res.status === 401) {
+          return alert('Verification code error!')
+        } else if (res.status === 402) {
+          return alert('User already exsit!')
+        } else if (res.status === 403) {
+          return alert('All inputs are required!')
+        } else if (res.status === 200) {
+          location.href = '/views/login.html'
+        }
+      }).catch((err) => {
+        console.log(err)
+      })
+  }
+</script>

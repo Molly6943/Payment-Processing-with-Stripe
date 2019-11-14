@@ -42,7 +42,7 @@ button {
 	line-height: 40px;
 	background: #2191e3;
 	border: 0;
-	color: #fff
+	color: #fff;
 }
 #smsCodeBox input {
 	width: 70%;
@@ -81,7 +81,7 @@ button {
 	background: #fff;
 	width: 900px;
 	padding-bottom: 40px;
-	margin: 10px auto 2% auto;
+	margin: 10px auto 10px auto;
 	border: 1px #d5d5d5 solid
 }
 .dashboard-body section {
@@ -96,16 +96,11 @@ button {
 	padding-left: 70px;
 	margin-top: 10px;
 }
-.dashboard-select select {
-	border: 1px #d5d5d5 solid;
-  margin-left: 5px;
-  appearance:none;
-  -moz-appearance:none;
-  -webkit-appearance:none;
-  height: 30px;
-  padding:2px 10px;
-  padding-right: 20px;
-  box-sizing: border-box;
+.dashboard-product {
+	display: inline-block;
+	width: 100px;
+	height: 30px;
+	line-height: 30px;
 }
 .dashboard-link button {
 	width: 80px;

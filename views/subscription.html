@@ -1,23 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="id=edge,chrome=1" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Subscription</title>
-    <link rel="stylesheet" type="text/css" href="/css/subscription.css" />
-  </head>
-  <body>
-    <div class="subscription-body">
-      <div class="card basic-card">$10/per Month</div>
-      <div class="card plus-card">$20/per Month</div>
-      <div class="card advanced-card">$30/per Month</div>
-    </div>
-  </body>
+<link rel="stylesheet" type="text/css" href="/css/subscription.css" />
+{{#products}}
+<div class="subscription-card">
+  <span data-index="{{id}}" id="product">{{name}} for ${{price}}/per Month</span>
+</div>
+{{/products}}
 
-  <script type="text/javascript">
-    //
-  </script>
-
-
-</html>
+<script type="text/javascript">
+  //
+</script>

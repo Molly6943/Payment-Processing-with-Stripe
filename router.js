@@ -5,7 +5,9 @@ const sqlite = require('./async_sqlite')
 
 const config = require('./config')
 
-const twilioClient = require('twilio')(config.twilio.accountSid, config.twilio.authToken);
+const twilioClient = require('twilio')(config.twilio.accountSid, config.twilio.authToken)
+
+const stripe = require('stripe')(config.stripe.STRIPE_SECRET_KEY)
 
 const verifyVerificationCode = async (mobile, verificationCode) => {
   var sms = await sqlite.get(`
@@ -40,10 +42,10 @@ router.post('/sms/verficationcode', (req, res) => {
 router.post('/signup', async (req, res) => {
   var body = req.body
   var user = {}
-  //check verification vode
-  // if (!(await verifyVerificationCode(body.mobile, body.smsVerificationCode))) {
-  //   return res.status(401).send('Verification code error!')
-  // }
+
+  if (!(await verifyVerificationCode(body.mobile, body.smsVerificationCode))) {
+    return res.status(401).send('Verification code error!')
+  }
 
   try {
     user = await sqlite.get(`SELECT * FROM users WHERE email = '${body.email}' AND deleted = false`)
@@ -57,8 +59,8 @@ router.post('/signup', async (req, res) => {
     return res.status(403).send('All inputs are required!')
   }
   try {
-    let entry = `NULL,'${body.fullName}','${body.email}', '${body.password}', '${body.mobile}', '${body.birthday}', '${body.subscription}', 'user', '${new Date()}'`
-    let insertSql = "INSERT INTO users(id, full_name, email, password, mobile, birthday, subscription, type, created_at) VALUES (" + entry + ")"
+    let entry = `NULL,'${body.fullName}','${body.email}', '${body.password}', '${body.mobile}', '${body.birthday}', 'user', '${new Date()}'`
+    let insertSql = "INSERT INTO users(id, full_name, email, password, mobile, birthday, type, created_at) VALUES (" + entry + ")"
     await sqlite.run(insertSql)
   } catch (err) {
     return res.status(500).end()
@@ -99,27 +101,135 @@ router.post('/login', async (req, res) => {
 })
 
 router.get('/payment', async (req, res) => {
-  let products = []
+  let product, products, boughtName
   if (req.session.login && req.session.type === 'user') { 
     try {
-     products = await sqlite.all(`SELECT * FROM products`)
+      product = await sqlite.get(`SELECT * FROM products WHERE user_id =${req.session.user.id}`)
     } catch (err) {
       return res.status(500).end()
     }
-    res.render('subscription', {products: products})
+    if (product) {
+      products = config.products.filter((item) => item.plan_id !== product.plan_id)
+      boughtName = product.name
+    } else {
+      products = config.products
+      boughtName = false
+    }
+    products = products.map((item) => {
+      item.price = item.price/100
+      return item
+    })
+    res.render('subscription', {products: products, boughtName: boughtName})
   } else {
     return res.redirect('/login')
   }
 })
 
-router.post('/payment', async (req, res) => {
-  let body = req.body
+router.get('/public-key', (req, res) => {
+  res.send({
+    publicKey: config.stripe.STRIPE_PUBLISHABLE_KEY
+  })
 })
+
+router.post('/payment', async (req, res) => {
+  let body = req.body;
+  let session
+  try {
+    session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      client_reference_id: req.session.user.id,
+      subscription_data: {
+        items: [
+          {
+            plan: body.planId
+          }
+        ]
+      },
+      line_items: [
+        {
+          name: body.name,
+          description: body.planId,
+          amount: body.price,
+          currency: 'usd',
+          quantity: 1,
+        },
+      ],
+      success_url: `${config.domain}/customer`,
+      cancel_url: `${config.domain}/payment`
+    })
+  } catch (err) {
+    return res.status(500).end()
+  }
+  res.send({
+    checkoutSessionId: session.id
+  })
+})
+
+// Webhook handler for asynchronous events.
+router.post("/webhook", async (req, res) => {
+  let eventType;
+  let product;
+  // Check if webhook signing is configured.
+  if (config.stripe.STRIPE_WEBHOOK_SECRET) {
+    // Retrieve the event by verifying the signature using the raw body and secret.
+    let event;
+    let signature = req.headers["stripe-signature"];
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.rawBody,
+        signature,
+        config.stripe.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`);
+      return res.sendStatus(400);
+    }
+    // Extract the object from the event.
+    data = event.data.object;
+    eventType = event.type;
+  } else {
+    // Webhook signing is recommended, but if the secret is not configured in `config.js`,
+    // retrieve the event data directly from the request body.
+    data = req.body.data;
+    eventType = req.body.type;
+  }
+  if (eventType === "checkout.session.completed") {
+    console.log(`🔔  Payment received!`);
+    let item = data.display_items[0]
+    try {
+      product = await sqlite.get(`SELECT * FROM products WHERE user_id =${data.client_reference_id}`)
+    } catch (err) {
+      return res.status(500).end()
+    }
+    if (product) {
+      try {
+        await sqlite.run(`UPDATE products SET plan_id = '${item.custom.description}', name = '${item.custom.name}', price = ${item.amount} WHERE user_id = ${data.client_reference_id}`)
+      } catch (err) {
+        return res.status(500).end()
+      }
+    } else {
+      try {
+        let entry = `NULL,'${item.custom.description}','${data.client_reference_id}', '${item.custom.name}', '${item.amount}'`
+        let insertSql = "INSERT INTO products(id, plan_id, user_id, name, price) VALUES (" + entry + ")"
+        await sqlite.run(insertSql)
+      } catch (err) {
+        return res.status(500).end()
+      }
+    }
+  }
+  res.sendStatus(200);
+});
 
 router.post('/cancel', async (req, res) => {
   let id = req.body.id || req.session.user.id
   try {
     await sqlite.run(`UPDATE users SET deleted = true WHERE id = ${id}`)
+  } catch(err) {
+    return res.status(500).end()
+  }
+  try {
+    await sqlite.run(`UPDATE products SET deleted = true WHERE user_id = ${id}`)
   } catch(err) {
     return res.status(500).end()
   }
@@ -141,7 +251,8 @@ router.get('/admin', async (req, res) => {
 })
 
 router.get('/customer', async (req, res) => {
-  let user = {}, products = []
+  let user = {}
+  let product, products
   if (req.session.login && req.session.type === 'user') {
     try {
       user = await sqlite.get(`SELECT * FROM users WHERE id = '${req.session.user.id}' AND deleted = false`)
@@ -149,9 +260,14 @@ router.get('/customer', async (req, res) => {
       return res.status(500).end()
     }
     try {
-      products = await sqlite.all(`SELECT * FROM products`)
+      product = await sqlite.get(`SELECT plan_id FROM products WHERE user_id =${req.session.user.id}`)
     } catch (err) {
       return res.status(500).end()
+    }
+    if (product) {
+      products = config.products.filter((item) => item.plan_id !== product.plan_id)
+    } else {
+      products = config.products
     }
     res.render('customer', {user: user, products: products});
   } else {
@@ -171,9 +287,8 @@ router.put('/customer', async (req, res) => {
 
 router.put('/password', async (req, res) => {
   let body = req.body
-  console.log('password', body)
   try {
-    await sqlite.run(`UPDATE users SET password = ${body.password} WHERE id = ${req.session.user.id}`)
+    await sqlite.run(`UPDATE users SET password = '${body.password}' WHERE id = '${req.session.user.id}'`)
   } catch(err) {
     return res.status(500).end()
   }

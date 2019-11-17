@@ -10,7 +10,17 @@ const sqlite = require('./async_sqlite.js')
 
 var startServer = () => new Promise((resolve, reject) => {
   const apiRouter = require('./router.js')
-
+  app.use(
+    express.json({
+      // We need the raw body to verify webhook signatures.
+      // Let's compute it only when hitting the Stripe webhook endpoint.
+      verify: function(req, res, buf) {
+        if (req.originalUrl.startsWith("/webhook")) {
+          req.rawBody = buf.toString();
+        }
+      }
+    })
+  );
   app.use(bodyParser.json({ limit: '10mb' }))
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: false }))
 
@@ -52,7 +62,6 @@ var runSql = async () => {
     password      VARCHAR(256),
     mobile        VARCHAR(18),
     birthday      TEXT,
-    subscription  TEXT,
     type          CHAR(8) NOT NULL,
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     deleted       BOOLEAN DEFAULT false
@@ -68,37 +77,19 @@ var runSql = async () => {
   
   await sqlite.run(`CREATE TABLE IF NOT EXISTS products (
     id            INTEGER PRIMARY KEY,
-    name          VARCHAR(18) NOT NULL UNIQUE,
-    price         INTEGER
+    plan_id       VARCHAR(256) NOT NULL UNIQUE,
+    user_id       INTEGER REFERENCES users (id) NOT NULL,
+    name          VARCHAR(18) NOT NULL,
+    price         INTEGER,
+    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    deleted       BOOLEAN DEFAULT false
   );`)
-
 
   let adminUser = await sqlite.get(`SELECT * FROM users WHERE email = 'admin@app.com'`)
   if (!adminUser) {
     await sqlite.run(`
-    INSERT INTO users(id, full_name, email, password, mobile, birthday, subscription, type)
-    VALUES (NULL, 'admin', 'admin@app.com', 'admin', NULL, NULL, NULL, 'admin')`)
-  }
-
-  let basicService = await sqlite.get(`SELECT * FROM products WHERE name = 'Basic'`)
-  if (!basicService) {
-    await sqlite.run(`
-    INSERT INTO products(id, name, price)
-    VALUES (NULL, 'Basic', 10)`)
-  }
-  
-  let plusService = await sqlite.get(`SELECT * FROM products WHERE name = 'Plus'`)
-  if (!plusService) {
-    await sqlite.run(`
-    INSERT INTO products(id, name, price)
-    VALUES (NULL, 'Plus', 20)`)
-  }
-  
-  let advancedService = await sqlite.get(`SELECT * FROM products WHERE name = 'Advanced'`)
-  if (!advancedService) {
-    await sqlite.run(`
-    INSERT INTO products(id, name, price)
-    VALUES (NULL, 'Advanced', 30)`)
+    INSERT INTO users(id, full_name, email, password, mobile, birthday, type)
+    VALUES (NULL, 'admin', 'admin@app.com', 'admin', NULL, NULL, 'admin')`)
   }
 
   await startServer()

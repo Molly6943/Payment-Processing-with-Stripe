@@ -1,10 +1,58 @@
 <link rel="stylesheet" type="text/css" href="/css/subscription.css" />
+<script src="https://js.stripe.com/v3/"></script>
+<h3>Buy our software service, here is the plan:</h3>
+<p>You have already purchased: <b>{{boughtName}}</b></p>
 {{#products}}
-<div class="subscription-card">
-  <span data-index="{{id}}" id="product">{{name}} for ${{price}}/per Month</span>
+<div class="subscription-card" onclick="checkout('{{plan_id}}', '{{name}}', '{{price}}')">
+  <span>{{name}} for ${{price}}/per Month</span>
 </div>
 {{/products}}
 
 <script type="text/javascript">
-  //
+var stripe;
+var checkoutSessionId;
+
+var setupElements = function() {
+  fetch("/public-key", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+    .then(function(result) {
+      return result.json();
+    })
+    .then(function(data) {
+      stripe = Stripe(data.publicKey);
+    });
+};
+setupElements()
+
+var checkout = function(id, name, price) {
+  fetch("/payment", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ planId: id, name: name, price: price*100 })
+  }).then(function(result) {
+      return result.json();
+    }).then(function(data) {
+      checkoutSessionId = data.checkoutSessionId;
+      stripe
+        .redirectToCheckout({
+          sessionId: checkoutSessionId
+        })
+        .then(function(result) {
+          console.log("error");
+          // If `redirectToCheckout` fails due to a browser or network
+          // error, display the localized error message to your customer
+          // using `result.error.message`.
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+    });
+};
+
 </script>

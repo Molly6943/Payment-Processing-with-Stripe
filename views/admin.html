@@ -1,70 +1,47 @@
 <link rel="stylesheet" type="text/css" href="/css/admin.css" />
 <table>
-    <caption>List of Customer</caption>
-    <thead>
+  <caption>List of Customer</caption>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Full Name</th>
+      <th>Email</th>
+      <th>Brith Date</th>
+      <th>Cell Number</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody">
+    {{#list}}
       <tr>
-        <th>ID</th>
-        <th>Full Name</th>
-        <th>Email</th>
-        <th>Brith Date</th>
-        <th>Cell Number</th>
-        <th>Subscription</th>
-        <th>Action</th>
+        <td>{{id}}</td>
+        <td>{{full_name}}</td>
+        <td>{{email}}</td>
+        <td>{{birthday}}</td>
+        <td>{{mobile}}</td>
+        <td>
+          <a href="#" id="switchBtn" onclick="switchPlan('{{id}}')">switch</a> |
+          <a href="#" id="cancelBth" onclick="cancelClick('{{id}}')">cancel</a>
+        </td>
       </tr>
-    </thead>
-    <tbody id="tableBody">
-      {{#list}}
-        <tr>
-          <td>{{id}}</td>
-          <td>{{full_name}}</td>
-          <td>{{email}}</td>
-          <td>{{birthday}}</td>
-          <td>{{mobile}}</td>
-          <td>{{subscription}}</td>
-          <td>
-            <a href="#" data-index="{{id}}" id="switchBtn">switch</a> |
-            <a href="#" data-index="{{id}}" id="cancelBth">cancel</a>
-          </td>
-        </tr>
-      {{/list}}
-    </tbody>
-  </table>
-  <script>
-    var cancelBtn = document.getElementById('cancelBth');
-    var switchBtn = document.getElementById('switchBtn');
-    cancelBtn.addEventListener('click', function(e) {
-      var el = e.target;
-      var id = el.dataset.index
-      let params = { id: id }
-      console.log(params)
-      fetch('/cancel',
-        {
-          body: JSON.stringify(params),
-          headers: {
-            'content-type': 'application/json'
-          },
-          method: 'POST'
-        }).then((res) => {
-          console.log('####', res)
-          if (res.status === 200) {
-            // getUsers()
-            location.href = `http://${location.host}/admin`
-          }
-        }).catch((err) => {
-          console.log(err)
-        })
+    {{/list}}
+  </tbody>
+</table>
+<script type="text/javascript">
+ function cancelClick (id) {
+  fetch('/cancel',
+    {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({id: id})
+    }).then(res => {
+      if (res.status === 200) {
+        location.href = `http://${location.host}/admin`
+      }
+    }).catch(err => {
+      console.log(err)
     })
-
-    switchBtn.addEventListener('click', function(e) {
-      var el = e.target;
-      var id = el.dataset.index
-    })
-
-    function getUsers () {
-      fetch('/admin').then((res) => {
-        console.log('res', res)
-        }).catch((err) => {
-          console.log(err)
-        })
-    }
-  </script>
+ }
+</script>
